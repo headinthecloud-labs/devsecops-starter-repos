@@ -1,15 +1,15 @@
 %% Mermaid diagram for the landing-zone starter
 flowchart LR
-  subgraph AWS[Sandbox Account]
+  subgraph AWS["Sandbox Account"]
     direction TB
-    subgraph Logging[Central Logging]
-      S3Logs[(S3: org-log-bucket)]
-      CW[CloudWatch Logs]
+    subgraph Logging["Central Logging"]
+      S3Logs[("S3: org-log-bucket")]
+      CW["CloudWatch Logs"]
     end
-    CT[CloudTrail (multi-region)]
-    CFG[AWS Config]
-    GD[GuardDuty]
-    SH[Security Hub]
+    CT["CloudTrail (multi-region)"]
+    CFG["AWS Config"]
+    GD["GuardDuty"]
+    SH["Security Hub"]
     CT --> S3Logs
     CFG --> S3Logs
     GD --> SH
