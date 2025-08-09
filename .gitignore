@@ -1,0 +1,36 @@
+# Terraform local files
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+*.tfvars
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Environment / creds
+*.env
+*.envrc
+.aws/
+.aws-sso/
+.secrets/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.venv/
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Node / frontend junk (if frontend added later)
+node_modules/
+dist/
+

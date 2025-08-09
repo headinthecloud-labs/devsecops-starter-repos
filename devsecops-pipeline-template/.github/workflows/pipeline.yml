@@ -1,0 +1,49 @@
+name: devsecops-pipeline
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # for OIDC
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tooling
+        run: |
+          pip install bandit
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Secrets scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+      - name: IaC scan (Checkov)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform
+          quiet: true
+      - name: Python SAST (Bandit)
+        run: bandit -r src || true  # start lenient; tighten later
+      - name: Build container image
+        run: docker build -t demo:ci src/demo
+      - name: Trivy image scan
+        run: trivy image --no-progress --exit-code 1 demo:ci || (echo "Trivy found issues"; exit 1)
+      - name: SBOM (Syft)
+        run: syft demo:ci -o spdx-json=sbom.spdx.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-artifacts
+          path: |
+            sbom.spdx.json
+  # Add a deploy job later that requires all checks to pass.

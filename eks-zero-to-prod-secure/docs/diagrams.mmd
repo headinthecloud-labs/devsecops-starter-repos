@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph VPC
+    EKS[(EKS Control Plane)]
+    NG1[Node Group: workers]
+    ECR[(ECR Images)]
+    EKS --> NG1
+  end
+  Devs[GitHub Actions OIDC] -->|AssumeRole| AWS[(AWS Account)]
+  AWS --> ECR
+  AWS --> VPC

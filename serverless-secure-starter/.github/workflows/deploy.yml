@@ -1,0 +1,32 @@
+name: serverless-deploy
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install dev deps
+        run: |
+          python -m venv .venv && source .venv/bin/activate
+          pip install -r requirements-dev.txt
+          pytest -q
+      - name: Zip lambda
+        run: zip -r lambda.zip src
+      - name: Configure AWS creds via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform Apply
+        uses: hashicorp/setup-terraform@v3
+      - run: |
+          terraform -chdir=terraform init
+          terraform -chdir=terraform apply -auto-approve
